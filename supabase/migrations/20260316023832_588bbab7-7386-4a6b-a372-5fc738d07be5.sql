@@ -1,0 +1,1 @@
+UPDATE public.teams SET logo_url = '/images/lsg-logo.avif' WHERE short_name = 'LSG';

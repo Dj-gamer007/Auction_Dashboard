@@ -1,0 +1,1 @@
+CREATE POLICY "Auction players can be deleted by anyone" ON public.auction_players FOR DELETE USING (true);

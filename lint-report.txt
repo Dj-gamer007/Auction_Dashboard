@@ -1,0 +1,89 @@
+﻿
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\AcceleratedAuction.tsx
+  26:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\AddPlayerModal.tsx
+   36:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\BidTracker.tsx
+   60:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   90:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\CurrentPlayerSpotlight.tsx
+   27:11  error    Empty block statement                                                                                       no-empty
+   44:11  error    Empty block statement                                                                                       no-empty
+   52:33  error    Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+   55:37  error    Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+   72:6   warning  React Hook useEffect has a missing dependency: 'lastBid'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   98:31  error    Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+  104:36  error    Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\EditPlayerModal.tsx
+   61:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  130:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\RandomTeamGenerator.tsx
+  73:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\badge.tsx
+  29:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\button.tsx
+  47:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\command.tsx
+  24:11  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\form.tsx
+  129:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\navigation-menu.tsx
+  111:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\sidebar.tsx
+  636:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\sonner.tsx
+  27:19  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\components\ui\toggle.tsx
+  37:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\hooks\useAuctionData.ts
+  52:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  63:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\pages\Host.tsx
+  108:144  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:144  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:124  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:14   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  150:124  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:10   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\src\pages\TeamDetail.tsx
+  35:9  warning  The 'retained' conditional could make the dependencies of useMemo Hook (at line 59) change on every render. To fix this, wrap the initialization of 'retained' in its own useMemo() Hook        react-hooks/exhaustive-deps
+  36:9  warning  The 'soldPlayers' conditional could make the dependencies of useMemo Hook (at line 59) change on every render. To fix this, wrap the initialization of 'soldPlayers' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  36:9  warning  The 'soldPlayers' conditional could make the dependencies of useMemo Hook (at line 78) change on every render. To fix this, wrap the initialization of 'soldPlayers' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\supabase\functions\fetch-player-images\index.ts
+  17:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jayaraman\Desktop\Auction\iplauction2026dashboard-main\tailwind.config.ts
+  89:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 46 problems (35 errors, 11 warnings)
+
