@@ -13,131 +13,23 @@ interface Props {
   fullscreen?: boolean;
 }
 
-function playTickSound() {
-  try {
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.1);
-  } catch {}
-}
-
-function playTimerEndSound() {
-  try {
-    const ctx = new AudioContext();
-    [0, 0.15, 0.3].forEach(offset => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(1000, ctx.currentTime + offset);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime + offset);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + offset + 0.12);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime + offset);
-      osc.stop(ctx.currentTime + offset + 0.12);
-    });
-  } catch {}
-}
-
 export function CurrentPlayerSpotlight({ player, teams, fullscreen }: Props) {
-  const [timerSeconds, setTimerSeconds] = useState(10);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [expireAt, setExpireAt] = useState<number | null>(null);
   const [lastBid, setLastBid] = useState<number | null>(null);
   const [highlightColor, setHighlightColor] = useState<string | null>(null);
-  const lastPlayerIdRef = useRef<string | null>(null);
 
   const currentBid = (player as any)?.current_bid as number | null;
-  const timerStartedAt = (player as any)?.timer_started_at as string | null;
   const leadingTeamId = (player as any).leading_team_id as string | null;
   const leadingTeam = teams?.find(t => t.id === leadingTeamId);
 
-  // Auto-start timer when a NEW player becomes current
-  // Works regardless of whether the host sends timer_started_at or not
-  useEffect(() => {
-    if (!player) {
-      lastPlayerIdRef.current = null;
-      setExpireAt(null);
-      setTimerSeconds(10);
-      setTimerRunning(false);
-      return;
-    }
-
-    // If we received an explicit timer_started_at (from local host or DB), use it
-    if (timerStartedAt) {
-      setExpireAt(new Date(timerStartedAt).getTime() + 10000);
-      lastPlayerIdRef.current = player.id;
-      return;
-    }
-
-    // If this is a NEW player (different from last one), auto-start a 10s timer locally
-    if (player.id !== lastPlayerIdRef.current) {
-      lastPlayerIdRef.current = player.id;
-      setExpireAt(Date.now() + 10000);
-    }
-  }, [player?.id, timerStartedAt]);
-
-  // Flash highlight on bid increment AND reset timer to sync with host
+  // Flash highlight on bid increment
   useEffect(() => {
     if (!player || !currentBid) return;
     if (lastBid !== null && currentBid !== lastBid) {
       setHighlightColor(leadingTeam?.color || '#22c55e');
       setTimeout(() => setHighlightColor(null), 500);
-      // Reset timer to 10s on every bid change — keeps viewer timer synced with host
-      setExpireAt(Date.now() + 10000);
     }
     setLastBid(currentBid);
   }, [currentBid, player, leadingTeam]);
-
-  // Sync from precise websocket broadcast for instant <50ms updates
-  useEffect(() => {
-    let mounted = true;
-    const sub = auctionChannel.on('broadcast', { event: 'auction:start' }, ({ payload }) => {
-      if (!mounted) return;
-      if (payload.playerId === player?.id) {
-        setExpireAt(payload.expireAt);
-      }
-    });
-    return () => { mounted = false; };
-  }, [player?.id]);
-
-  // Actual true-server-time countdown loop
-  useEffect(() => {
-    if (!expireAt) {
-      setTimerRunning(false);
-      return;
-    }
-    
-    // Check remaining instantly
-    const getRemaining = () => Math.max(0, Math.ceil((expireAt - Date.now()) / 1000));
-    let remaining = getRemaining();
-    setTimerSeconds(remaining);
-    setTimerRunning(remaining > 0);
-
-    if (remaining <= 0) return;
-
-    const interval = setInterval(() => {
-      const rem = getRemaining();
-      setTimerSeconds(rem);
-      
-      // Auto-stop when hit 0
-      if (rem <= 0) {
-        setTimerRunning(false);
-        playTimerEndSound();
-        clearInterval(interval);
-      } else if (rem <= 4) {
-        playTickSound();
-      }
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [expireAt]);
 
   if (!player) return null;
 
@@ -150,9 +42,6 @@ export function CurrentPlayerSpotlight({ player, teams, fullscreen }: Props) {
   const currentBidDisplay = currentBid
     ? `₹${currentBid.toFixed(2)} Cr`
     : basePriceInCr;
-
-  const isUrgent = timerSeconds <= 3 && timerSeconds > 0;
-  const isExpired = timerSeconds === 0;
 
   return (
     <motion.div
@@ -180,25 +69,7 @@ export function CurrentPlayerSpotlight({ player, teams, fullscreen }: Props) {
             <span className={`text-muted-foreground ${fullscreen ? 'text-base' : 'text-sm'}`}>
               Set {player.set_name || player.set_number}
             </span>
-            {/* Timer Display */}
-            <div className={`font-display font-bold rounded-lg px-4 py-2 ${
-              isExpired ? 'bg-destructive/20 text-destructive' :
-              isUrgent ? 'bg-live/20 text-live live-pulse' :
-              'bg-muted/50 text-foreground'
-            } ${fullscreen ? 'text-3xl' : 'text-xl'}`}>
-              {isExpired ? '⏰ TIME!' : `${timerSeconds}s`}
-            </div>
           </div>
-        </div>
-
-        {/* Timer progress bar */}
-        <div className="mt-3 h-2 bg-muted rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-1000 ${
-              isUrgent ? 'bg-live' : isExpired ? 'bg-destructive' : 'bg-primary'
-            }`}
-            style={{ width: `${(timerSeconds / 10) * 100}%` }}
-          />
         </div>
 
         {/* Main content */}

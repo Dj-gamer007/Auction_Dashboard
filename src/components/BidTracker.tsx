@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { AuctionTimer, AuctionTimerHandle } from '@/components/AuctionTimer';
 import { auctionChannel } from '@/hooks/useAuctionData';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -55,8 +54,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
   const { toast } = useToast();
   const [selectedTeam, setSelectedTeam] = useState('');
   const [soldPrice, setSoldPrice] = useState('');
-  const [timerExpired, setTimerExpired] = useState(false);
-  const timerRef = useRef<AuctionTimerHandle>(null);
 
   const [optimisticBid, setOptimisticBid] = useState<number | null>(null);
   const [optimisticTeamId, setOptimisticTeamId] = useState<string | null>(null);
@@ -68,14 +65,8 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
 
   const leadingTeam = teams.find(t => t.id === leadingTeamId);
 
-  const handleTimerEnd = useCallback(() => {
-    setTimerExpired(true);
-  }, []);
-
   const incrementBid = async (amount: number) => {
-    if (timerExpired) return; // Freeze bids when timer expired
     const newBid = displayBid + amount;
-    const timestamp = Date.now();
     const newTeamId = selectedTeam || leadingTeamId;
 
     // 1. Optimistic local update (instant 0ms Host UI reflex)
@@ -90,22 +81,11 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
       payload: { playerId: currentPlayer.id, currentBid: newBid, leadingTeamId: newTeamId }
     });
 
-    auctionChannel.send({
-      type: 'broadcast',
-      event: 'auction:start',
-      payload: { playerId: currentPlayer.id, expireAt: timestamp + 10000 }
-    });
-
     // 3. Persist async to database (background)
     await supabase.from('auction_players').update({
       current_bid: newBid,
       leading_team_id: newTeamId,
-      timer_started_at: new Date(timestamp).toISOString(),
     } as any).eq('id', currentPlayer.id);
-
-    // Auto-start/reset timer on each bid
-    setTimerExpired(false);
-    timerRef.current?.start();
   };
 
   const resetBid = async () => {
@@ -125,8 +105,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
     });
 
     setSelectedTeam('');
-    setTimerExpired(false);
-    timerRef.current?.reset();
     onComplete();
   };
 
@@ -159,6 +137,7 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
       sold_price: price,
       current_bid: null,
       leading_team_id: null,
+      timer_started_at: null,
     } as any).eq('id', currentPlayer.id);
 
     await supabase.from('teams').update({
@@ -176,8 +155,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
 
     setSoldPrice('');
     setSelectedTeam('');
-    setTimerExpired(false);
-    timerRef.current?.reset();
     playSoldSound();
 
     // Universal force sync backstop
@@ -201,6 +178,7 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
       status: 'unsold',
       current_bid: null,
       leading_team_id: null,
+      timer_started_at: null,
     } as any).eq('id', currentPlayer.id);
 
     await supabase.from('auction_log').insert({
@@ -208,9 +186,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
       player_name: currentPlayer.player_name,
       action: 'unsold',
     });
-
-    setTimerExpired(false);
-    timerRef.current?.reset();
 
     // Universal force sync backstop
     auctionChannel.send({ type: 'broadcast', event: 'auction:refresh' });
@@ -249,8 +224,8 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
 
         {/* Team selector for bid */}
         <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-          <SelectTrigger className={`h-8 text-xs ${timerExpired ? 'ring-2 ring-live animate-pulse' : ''}`}>
-            <SelectValue placeholder={timerExpired ? '⚠️ Select bidding team!' : 'Select bidding team'} />
+          <SelectTrigger className="h-8 text-xs">
+            <SelectValue placeholder="Select bidding team" />
           </SelectTrigger>
           <SelectContent>
             {teams.map(t => (
@@ -268,12 +243,7 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
               key={inc.label}
               size="sm"
               onClick={() => incrementBid(inc.value)}
-              disabled={timerExpired}
-              className={`h-10 font-bold text-sm ${
-                timerExpired 
-                  ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-50' 
-                  : 'bg-accent text-accent-foreground hover:bg-accent/80'
-              }`}
+              className="h-10 font-bold text-sm bg-accent text-accent-foreground hover:bg-accent/80"
             >
               {inc.label}
             </Button>
@@ -283,15 +253,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
         <Button variant="outline" size="sm" className="w-full text-xs" onClick={resetBid}>
           ↺ Reset Bid to Base
         </Button>
-
-        {/* Auction Timer */}
-        <AuctionTimer ref={timerRef} onTimerEnd={handleTimerEnd} />
-
-        {timerExpired && (
-          <div className="text-center text-xs font-bold text-live animate-pulse">
-            ⏰ Timer expired! Select a team and confirm the sale or mark unsold.
-          </div>
-        )}
       </div>
 
       {/* Confirm Sale */}

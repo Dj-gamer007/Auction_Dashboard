@@ -23,7 +23,6 @@ export function useAuctionData() {
   const playersRef        = useRef<AuctionPlayer[]>([]);
   const retainedRef       = useRef<RetainedPlayer[]>([]);
   const logRef            = useRef<AuctionLog[]>([]);
-  const virtualTimers     = useRef<Record<string, string>>({});
 
   // ── Full fetch functions (used for initial load & fallback) ──────────────
   const fetchTeams = useCallback(async () => {
@@ -34,13 +33,9 @@ export function useAuctionData() {
   const fetchPlayers = useCallback(async () => {
     const { data } = await supabase.from('auction_players').select('*').order('set_number');
     if (data) {
-      const merged = data.map(p => ({
-        ...p,
-        timer_started_at: virtualTimers.current[p.id] || (p as any).timer_started_at || null
-      }));
-      playersRef.current = merged;
-      setAuctionPlayers(merged);
-      setCurrentPlayer(merged.find(p => p.status === 'current') ?? null);
+      playersRef.current = data;
+      setAuctionPlayers(data);
+      setCurrentPlayer(data.find(p => p.status === 'current') ?? null);
     }
   }, []);
 
@@ -72,11 +67,11 @@ export function useAuctionData() {
     setAuctionPlayers(prev => {
       let next: AuctionPlayer[];
       if (eventType === 'INSERT') {
-        next = [...prev, { ...newRow, timer_started_at: virtualTimers.current[newRow.id] || (newRow as any).timer_started_at || null } as any];
+        next = [...prev, newRow as AuctionPlayer];
       } else if (eventType === 'DELETE') {
         next = prev.filter(p => p.id !== oldRow.id);
       } else {
-        next = prev.map(p => p.id === newRow.id ? { ...newRow, timer_started_at: virtualTimers.current[newRow.id] || (newRow as any).timer_started_at || null } as any : p);
+        next = prev.map(p => p.id === newRow.id ? newRow as AuctionPlayer : p);
       }
       
       // Update current player from new list
@@ -129,27 +124,16 @@ export function useAuctionData() {
       // Instant <50ms sync via WebSockets (bypasses postgres latency)
       .on('broadcast', { event: 'auction:sync_bid' }, ({ payload }) => {
         const { playerId, currentBid, leadingTeamId } = payload;
-        if (currentBid === null) delete virtualTimers.current[playerId];
         setAuctionPlayers(prev => {
           const next = prev.map(p => 
-            p.id === playerId ? { ...p, current_bid: currentBid, leading_team_id: leadingTeamId, timer_started_at: virtualTimers.current[playerId] || null } as any : p
+            p.id === playerId ? { ...p, current_bid: currentBid, leading_team_id: leadingTeamId } as any : p
           );
-          setCurrentPlayer(next.find(p => p.status === 'current') ?? null);
-          return next;
-        });
-      })
-      .on('broadcast', { event: 'auction:start' }, ({ payload }) => {
-        const isoString = new Date(payload.expireAt - 10000).toISOString();
-        virtualTimers.current[payload.playerId] = isoString;
-        setAuctionPlayers(prev => {
-          const next = prev.map(p => p.id === payload.playerId ? { ...p, timer_started_at: isoString } as any : p);
           setCurrentPlayer(next.find(p => p.status === 'current') ?? null);
           return next;
         });
       })
       .on('broadcast', { event: 'auction:player_status' }, ({ payload }) => {
         const { playerId, status, soldToTeam, soldPrice } = payload;
-        delete virtualTimers.current[playerId];
         setAuctionPlayers(prev => {
           const next = prev.map(p => {
              // Revert old current players if a new one is set
@@ -165,7 +149,7 @@ export function useAuctionData() {
                  sold_price: soldPrice || null, 
                  current_bid: status === 'current' ? p.current_bid : null, 
                  leading_team_id: status === 'current' ? p.leading_team_id : null,
-                 timer_started_at: status === 'current' ? virtualTimers.current[p.id] || null : null
+                 timer_started_at: null
                } as any;
              }
              return p;
