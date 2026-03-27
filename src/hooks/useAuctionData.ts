@@ -71,8 +71,7 @@ export function useAuctionData() {
       } else if (eventType === 'DELETE') {
         next = prev.filter(p => p.id !== oldRow.id);
       } else {
-        // DEFENSIVE MERGE: Ensure we don't lose fields (like image_url) if Supabase sends a partial row
-        next = prev.map(p => p.id === newRow.id ? { ...p, ...newRow } as any : p);
+        next = prev.map(p => p.id === newRow.id ? newRow as AuctionPlayer : p);
       }
       
       // Update current player from new list
