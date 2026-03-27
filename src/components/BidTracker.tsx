@@ -117,80 +117,101 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
     }
 
     const team = teams.find(t => t.id === teamId);
-    if (!team) return;
+    if (!team) {
+      toast({ title: 'Invalid team selected', variant: 'destructive' });
+      return;
+    }
 
-    // Optimistically trigger global UI transition immediately
-    auctionChannel.send({
-      type: 'broadcast',
-      event: 'auction:player_status',
-      payload: { 
-        playerId: currentPlayer.id, 
-        status: 'sold',
-        soldToTeam: teamId,
-        soldPrice: price
-      }
-    });
+    try {
+      // Optimistically trigger global UI transition immediately
+      auctionChannel.send({
+        type: 'broadcast',
+        event: 'auction:player_status',
+        payload: { 
+          playerId: currentPlayer.id, 
+          status: 'sold',
+          soldToTeam: teamId,
+          soldPrice: price
+        }
+      });
 
-    await supabase.from('auction_players').update({
-      status: 'sold',
-      sold_to_team: teamId,
-      sold_price: price,
-      current_bid: null,
-      leading_team_id: null,
-      timer_started_at: null,
-    } as any).eq('id', currentPlayer.id);
+      const { error: playerError } = await supabase.from('auction_players').update({
+        status: 'sold' as any,
+        sold_to_team: teamId,
+        sold_price: price,
+        current_bid: null,
+        leading_team_id: null,
+        timer_started_at: null,
+      } as any).eq('id', currentPlayer.id);
 
-    await supabase.from('teams').update({
-      spent_budget: team.spent_budget + price,
-    }).eq('id', teamId);
+      if (playerError) throw playerError;
 
-    await supabase.from('auction_log').insert({
-      player_id: currentPlayer.id,
-      team_id: teamId,
-      player_name: currentPlayer.player_name,
-      team_name: team.short_name,
-      sold_price: price,
-      action: 'sold',
-    });
+      const { error: teamError } = await supabase.from('teams').update({
+        spent_budget: team.spent_budget + price,
+      }).eq('id', teamId);
 
-    setSoldPrice('');
-    setSelectedTeam('');
-    playSoldSound();
+      if (teamError) throw teamError;
 
-    // Universal force sync backstop
-    auctionChannel.send({ type: 'broadcast', event: 'auction:refresh' });
+      const { error: logError } = await supabase.from('auction_log').insert({
+        player_id: currentPlayer.id,
+        team_id: teamId,
+        player_name: currentPlayer.player_name,
+        team_name: team.short_name,
+        sold_price: price,
+        action: 'sold',
+      });
 
-    toast({ title: `${currentPlayer.player_name} sold to ${team.short_name} for ₹${price.toFixed(2)} Cr!` });
+      if (logError) throw logError;
+
+      setSoldPrice('');
+      setSelectedTeam('');
+      playSoldSound();
+
+      // Universal force sync backstop
+      auctionChannel.send({ type: 'broadcast', event: 'auction:refresh' });
+      toast({ title: `${currentPlayer.player_name} sold to ${team.short_name} for ₹${price.toFixed(2)} Cr!` });
+    } catch (err: any) {
+      console.error('Sale error:', err);
+      toast({ title: 'Error confirming sale', description: err.message, variant: 'destructive' });
+    }
   };
 
   const markUnsold = async () => {
-    // Optimistically trigger global UI transition immediately
-    auctionChannel.send({
-      type: 'broadcast',
-      event: 'auction:player_status',
-      payload: { 
-        playerId: currentPlayer.id, 
-        status: 'unsold'
-      }
-    });
+    try {
+      // Optimistically trigger global UI transition immediately
+      auctionChannel.send({
+        type: 'broadcast',
+        event: 'auction:player_status',
+        payload: { 
+          playerId: currentPlayer.id, 
+          status: 'unsold'
+        }
+      });
 
-    await supabase.from('auction_players').update({
-      status: 'unsold',
-      current_bid: null,
-      leading_team_id: null,
-      timer_started_at: null,
-    } as any).eq('id', currentPlayer.id);
+      const { error: playerError } = await supabase.from('auction_players').update({
+        status: 'unsold' as any,
+        current_bid: null,
+        leading_team_id: null,
+        timer_started_at: null,
+      } as any).eq('id', currentPlayer.id);
 
-    await supabase.from('auction_log').insert({
-      player_id: currentPlayer.id,
-      player_name: currentPlayer.player_name,
-      action: 'unsold',
-    });
+      if (playerError) throw playerError;
 
-    // Universal force sync backstop
-    auctionChannel.send({ type: 'broadcast', event: 'auction:refresh' });
+      const { error: logError } = await supabase.from('auction_log').insert({
+        player_id: currentPlayer.id,
+        player_name: currentPlayer.player_name,
+        action: 'unsold',
+      });
 
-    toast({ title: `${currentPlayer.player_name} marked as unsold` });
+      if (logError) throw logError;
+
+      // Universal force sync backstop
+      auctionChannel.send({ type: 'broadcast', event: 'auction:refresh' });
+      toast({ title: `${currentPlayer.player_name} marked as unsold` });
+    } catch (err: any) {
+      console.error('Unsold error:', err);
+      toast({ title: 'Error marking as unsold', description: err.message, variant: 'destructive' });
+    }
   };
 
   return (
