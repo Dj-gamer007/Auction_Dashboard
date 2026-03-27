@@ -95,7 +95,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
     await supabase.from('auction_players').update({
       current_bid: basePriceCr,
       leading_team_id: null,
-      timer_started_at: null,
     } as any).eq('id', currentPlayer.id);
     
     auctionChannel.send({
@@ -141,7 +140,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
         sold_price: price,
         current_bid: null,
         leading_team_id: null,
-        timer_started_at: null,
       } as any).eq('id', currentPlayer.id);
 
       if (playerError) throw playerError;
@@ -192,7 +190,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
         status: 'unsold' as any,
         current_bid: null,
         leading_team_id: null,
-        timer_started_at: null,
       } as any).eq('id', currentPlayer.id);
 
       if (playerError) throw playerError;

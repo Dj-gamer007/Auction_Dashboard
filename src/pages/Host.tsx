@@ -111,10 +111,10 @@ function HostDashboard() {
       payload: { playerId, status: 'current' }
     });
 
-    await supabase.from('auction_players').update({ status: 'available', current_bid: null, leading_team_id: null, timer_started_at: null } as any).eq('status', 'current');
+    await supabase.from('auction_players').update({ status: 'available', current_bid: null, leading_team_id: null } as any).eq('status', 'current');
     const player = auctionPlayers.find(p => p.id === playerId);
     const baseCr = player ? player.base_price / 100 : 0;
-    await supabase.from('auction_players').update({ status: 'current', current_bid: baseCr, leading_team_id: null, timer_started_at: null } as any).eq('id', playerId);
+    await supabase.from('auction_players').update({ status: 'current', current_bid: baseCr, leading_team_id: null } as any).eq('id', playerId);
     
     auctionChannel.send({ type: 'broadcast', event: 'auction:refresh' });
     toast({ title: 'Player set as current' });

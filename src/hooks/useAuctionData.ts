@@ -138,7 +138,7 @@ export function useAuctionData() {
           const next = prev.map(p => {
              // Revert old current players if a new one is set
              if (status === 'current' && p.status === 'current' && p.id !== playerId) {
-               return { ...p, status: 'available', current_bid: null, leading_team_id: null, timer_started_at: null } as any;
+               return { ...p, status: 'available', current_bid: null, leading_team_id: null } as any;
              }
              // Apply new status to target player
              if (p.id === playerId) {
@@ -149,7 +149,6 @@ export function useAuctionData() {
                  sold_price: soldPrice || null, 
                  current_bid: status === 'current' ? p.current_bid : null, 
                  leading_team_id: status === 'current' ? p.leading_team_id : null,
-                 timer_started_at: null
                } as any;
              }
              return p;
