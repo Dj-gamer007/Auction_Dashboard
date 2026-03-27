@@ -64,8 +64,6 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
   const displayBid = currentBid ?? basePriceCr;
 
   const leadingTeam = teams.find(t => t.id === leadingTeamId);
-  const imageUrl = (currentPlayer as any).image_url as string | null;
-  const hasImage = imageUrl && imageUrl !== 'none';
 
   const incrementBid = async (amount: number) => {
     const newBid = displayBid + amount;
@@ -198,24 +196,15 @@ export function BidTracker({ currentPlayer, teams, onComplete }: Props) {
   return (
     <div className="bg-card border border-border rounded-lg p-4 space-y-4">
       {/* Player Info */}
-      <div className="flex items-center gap-4">
-        {hasImage && (
-          <img 
-            src={imageUrl!} 
-            alt={currentPlayer.player_name} 
-            className="w-16 h-16 rounded-lg object-cover border border-border bg-muted"
-          />
-        )}
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-live live-pulse" />
-            <span className="text-[10px] font-bold text-live uppercase tracking-wider">Now Auctioning</span>
-          </div>
-          <h2 className="font-display font-bold text-xl text-foreground leading-tight">{currentPlayer.player_name}</h2>
-          <p className="text-[11px] text-muted-foreground">
-            {currentPlayer.role} | {currentPlayer.country} | Base: ₹{currentPlayer.base_price >= 100 ? `${basePriceCr.toFixed(2)} Cr` : `${currentPlayer.base_price} L`}
-          </p>
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-2 h-2 rounded-full bg-live live-pulse" />
+          <span className="text-xs font-bold text-live uppercase">Now Auctioning</span>
         </div>
+        <h2 className="font-display font-bold text-xl text-foreground">{currentPlayer.player_name}</h2>
+        <p className="text-xs text-muted-foreground">
+          {currentPlayer.role} | {currentPlayer.country} | Base: ₹{currentPlayer.base_price >= 100 ? `${basePriceCr.toFixed(2)} Cr` : `${currentPlayer.base_price} L`}
+        </p>
       </div>
 
       {/* Live Bid Tracker */}
